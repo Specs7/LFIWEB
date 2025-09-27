@@ -1,6 +1,8 @@
 
 # LFIWEB — Quick run & deploy (short)
 
+[![CI](https://github.com/Specs7/LFIWEB/actions/workflows/ci.yml/badge.svg)](https://github.com/Specs7/LFIWEB/actions/workflows/ci.yml)
+
 This short `readmegit.md` contains the minimal steps to run the project locally, test it, and common pointers for quick deployments. Place in the repository root and push when ready.
 
 ## Quick local setup (Linux)
