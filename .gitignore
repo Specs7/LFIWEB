@@ -1,0 +1,63 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.coverage
+.tox/
+.nox/
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Env vars
+.env
+.env.*
+
+# Database files
+*.db
+data.db
+backend/data.db
+
+# Logs
+*.log
+backend/server.log
+
+# Editor directories and files
+.vscode/
+.idea/
+*.sublime-workspace
+
+# Python packaging
+*.egg
+
+# Rachid autosave config
+.rachid_autosave.json
+
+# Mac
+.DS_Store
+
+# Node
+node_modules/
+
+# Ignore local secrets file if any
+secrets.json

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liste Municipale LFI - Notre Ville</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    {% if session.get('csrf_token') %}
+    <meta name="csrf-token" content="{{ session.get('csrf_token') }}">
+    {% endif %}
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <div class="logo">
+                <div class="phi-symbol">Φ</div>
+                La France Insoumise - Notre Ville
+            </div>
+            <ul class="nav-links">
+                <li><a href="#accueil">Accueil</a></li>
+                <li><a href="#actualites">Actualités</a></li>
+                <li><a href="#programme">Programme</a></li>
+                <li><a href="#equipe">Équipe</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+            <a class="admin-btn" href="/admin/request">
+                <i class="fas fa-edit"></i> Administration
+            </a>
+        </nav>
+    </header>
+
+    <main class="container">
+        <section class="hero" id="accueil">
+            <div class="lfi-logo" style="width: 120px; height: 120px; background: linear-gradient(45deg, #C9462C, #8B1538); border-radius: 50%; margin: 0 auto 2rem; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: white; font-weight: bold;">Φ</div>
+            <h1>L'Avenir en Commun</h1>
+            <div class="subtitle">Pour Notre Ville</div>
+            <p>Notre liste municipale La France Insoumise s'engage pour une transformation sociale et écologique de notre commune. Ensemble, construisons l'avenir que nous méritons tous.</p>
+        </section>
+
+        <div class="content-grid">
+            <div class="main-content">
+                <section id="actualites">
+                    <h2><i class="fas fa-newspaper"></i> Dernières actualités</h2>
+                    <div id="articles-container">
+                        <article class="article">
+                            <h3>Réunion publique : Notre vision pour 2026</h3>
+                            <div class="article-meta">
+                                <i class="fas fa-calendar"></i> 15 septembre 2025 | 
+                                <i class="fas fa-user"></i> Équipe de campagne
+                            </div>
+                            <img src="https://images.unsplash.com/photo-1577962917302-cd874c4e31d2?w=800&h=400&fit=crop" alt="Réunion publique">
+                            <p>Venez nombreux à notre prochaine réunion publique le 25 septembre à 19h30 à la salle des fêtes. Nous présenterons notre programme détaillé et répondrons à toutes vos questions. Entrée libre et gratuite.</p>
+                        </article>
+
+                        <article class="article">
+                            <h3>Transport public gratuit : notre engagement</h3>
+                            <div class="article-meta">
+                                <i class="fas fa-calendar"></i> 10 septembre 2025 | 
+                                <i class="fas fa-user"></i> Commission Transport
+                            </div>
+                            <img src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800&h=400&fit=crop" alt="Transport public">
+                            <p>La gratuité des transports en commun est au cœur de notre projet. Une mesure écologique et sociale qui permettra à tous les citoyens de se déplacer librement dans notre ville.</p>
+                        </article>
+                    </div>
+                </section>
+
+                <section id="medias" style="margin-top: 3rem;">
+                    <h2><i class="fas fa-images"></i> Galerie média</h2>
+                    <div class="media-grid" id="media-container">
+                        <div class="media-item">
+                            <img src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=300&fit=crop" alt="Événement 1">
+                            <h4>Marche pour le climat</h4>
+                            <p>500 participants mobilisés</p>
+                        </div>
+                        <div class="media-item">
+                            <img src="https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=400&h=300&fit=crop" alt="Événement 2">
+                            <h4>Forum des associations</h4>
+                            <p>Rencontre citoyenne</p>
+                        </div>
+                        <div class="media-item">
+                            <img src="https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=400&h=300&fit=crop" alt="Événement 3">
+                            <h4>Débat public</h4>
+                            <p>Démocratie participative</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div class="sidebar">
+                <h3><i class="fas fa-bullhorn"></i> Nos 6 piliers</h3>
+                <ul style="list-style: none; padding: 0;">
+                    <li style="padding: 0.8rem 0; border-bottom: 1px solid #eee;"><i class="fas fa-leaf" style="color: #27ae60; margin-right: 10px;"></i><strong>Urgence écologique</strong><br><small>Transition énergétique et protection de l'environnement</small></li>
+                    <li style="padding: 0.8rem 0; border-bottom: 1px solid #eee;"><i class="fas fa-balance-scale" style="color: #C9462C; margin-right: 10px;"></i><strong>Justice sociale</strong><br><small>Égalité des droits et lutte contre les inégalités</small></li>
+                    <li style="padding: 0.8rem 0; border-bottom: 1px solid #eee;"><i class="fas fa-users" style="color: #3498db; margin-right: 10px;"></i><strong>Démocratie participative</strong><br><small>Citoyens au cœur des décisions</small></li>
+                    <li style="padding: 0.8rem 0; border-bottom: 1px solid #eee;"><i class="fas fa-home" style="color: #e67e22; margin-right: 10px;"></i><strong>Services publics</strong><br><small>Accessibles et de qualité pour tous</small></li>
+                    <li style="padding: 0.8rem 0; border-bottom: 1px solid #eee;"><i class="fas fa-globe-europe" style="color: #9b59b6; margin-right: 10px;"></i><strong>République universelle</strong><br><small>Laïcité et solidarité internationale</small></li>
+                    <li style="padding: 0.8rem 0;"><i class="fas fa-fist-raised" style="color: #8B1538; margin-right: 10px;"></i><strong>Souveraineté populaire</strong><br><small>Le peuple décide de son avenir</small></li>
+                </ul>
+
+                <h3 style="margin-top: 2rem;"><i class="fas fa-share-alt"></i> Suivez-nous</h3>
+                <div class="social-links">
+                    <a href="#" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" title="Twitter"><i class="fab fa-twitter"></i></a>
+                    <a href="#" title="Instagram"><i class="fab fa-instagram"></i></a>
+                    <a href="#" title="YouTube"><i class="fab fa-youtube"></i></a>
+                </div>
+
+                <div style="margin-top: 2rem; padding: 1rem; background: #f8f9fa; border-radius: 10px;">
+                    <h4><i class="fas fa-envelope"></i> Contact</h4>
+                    <p><i class="fas fa-map-marker-alt"></i> 123 Rue de la République<br>75001 Notre Ville</p>
+                    <p><i class="fas fa-phone"></i> 01 23 45 67 89</p>
+                    <p><i class="fas fa-envelope"></i> contact@lfi-notreville.fr</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="container">
+        <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 1rem;">
+            <div class="phi-symbol" style="width: 40px; height: 40px;">Φ</div>
+            <span style="font-weight: bold; color: #C9462C;">La France Insoumise - Notre Ville</span>
+        </div>
+        <p>&copy; 2025 Liste Municipale LFI - Notre Ville. L'Avenir en Commun.</p>
+        <div class="social-links" style="margin-top: 1rem;">
+            <a href="#" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+            <a href="#" title="Twitter"><i class="fab fa-twitter"></i></a>
+            <a href="#" title="Instagram"><i class="fab fa-instagram"></i></a>
+            <a href="#" title="YouTube"><i class="fab fa-youtube"></i></a>
+        </div>
+    </footer>
+
+    <!-- Administration removed: use backend /admin/request for admin actions -->
+
+    <!-- Minimal admin form (hidden until user is authenticated as admin) -->
+    <div id="admin-panel" style="display:none; position: fixed; right: 20px; bottom: 20px; width: 360px; background: white; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); padding: 1rem; z-index:2000;">
+        <h4 style="margin-top:0;">Administration</h4>
+        <form id="adminArticleForm">
+            <div style="margin-bottom:0.5rem;"><input id="aTitle" placeholder="Titre" required style="width:100%; padding:0.5rem;" /></div>
+            <div style="margin-bottom:0.5rem;"><input id="aAuthor" placeholder="Auteur" style="width:100%; padding:0.5rem;" value="Équipe de campagne LFI" /></div>
+            <div style="margin-bottom:0.5rem;"><input id="aImage" placeholder="Image URL" style="width:100%; padding:0.5rem;" /></div>
+            <div style="margin-bottom:0.5rem;"><textarea id="aContent" placeholder="Contenu" rows="4" style="width:100%; padding:0.5rem;"></textarea></div>
+            <div style="display:flex; gap:0.5rem; justify-content:flex-end;"><button id="adminPublish" class="btn" type="submit">Publier</button><button id="adminClose" type="button" class="btn-secondary">Fermer</button></div>
+            <div id="adminMsg" style="margin-top:0.5rem;color:#333;"></div>
+        </form>
+    </div>
+
+    <!-- Edit modal for articles -->
+    <div id="article-edit-modal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <h3>Modifier l'article</h3>
+            <form id="articleEditForm">
+                <input type="hidden" id="editArticleId" />
+                <div class="form-group"><label>Titre</label><input id="editTitle" required style="width:100%; padding:0.5rem;" /></div>
+                <div class="form-group"><label>Auteur</label><input id="editAuthor" style="width:100%; padding:0.5rem;" /></div>
+                <div class="form-group"><label>Image URL</label><input id="editImage" style="width:100%; padding:0.5rem;" /></div>
+                <div class="form-group"><label>Contenu</label><textarea id="editContent" rows="6" style="width:100%; padding:0.5rem;"></textarea></div>
+                <div style="display:flex; justify-content:flex-end; gap:0.5rem;"><button type="submit" class="btn">Enregistrer</button><button type="button" id="editCancel" class="btn-secondary">Annuler</button></div>
+                <div id="editMsg" style="margin-top:0.5rem;color:#333;"></div>
+            </form>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
