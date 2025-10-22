@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Request access link</title>
+</head>
+<body>
+<h2>Request access link</h2>
+<form method="post" action="/auth/request-token" onsubmit="event.preventDefault(); send();">
+  <input type="email" id="email" name="email" required>
+  <button type="submit">Send link</button>
+</form>
+<div id="msg"></div>
+<script>
+ async function send(){
+   const email = document.getElementById('email').value
+   await fetch('/auth/request-token', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email})})
+   document.getElementById('msg').textContent = 'If the account exists, you will receive an email.'
+ }
+</script>
+</body>
+</html>

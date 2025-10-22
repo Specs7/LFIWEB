@@ -9,16 +9,26 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.10]
+    services:
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: ${{ matrix.python-version }}
       - name: Install dependencies
+        env:
+          REDIS_URL: redis://localhost:6379
         run: |
-          python -m venv .venv
-          . .venv/bin/activate
+          python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
       - name: Run tests
-        run: . .venv/bin/activate && pytest -q backend/tests
+        run: |
+          python -m pytest -q
