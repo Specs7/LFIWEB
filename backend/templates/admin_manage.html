@@ -1,0 +1,212 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Administration</title>
+  <link rel="stylesheet" href="/static/admin.css">
+</head>
+<body>
+<h2>Administration</h2>
+<p>Welcome, administrator. <a href="/admin/logout">Logout</a></p>
+
+<section>
+  <h3>Photos</h3>
+  <form id="uploadPhotoForm">
+    <input type="text" name="title" id="photoTitle" placeholder="Title">
+    <input type="text" name="description" id="photoDesc" placeholder="Description">
+    <div id="photoDropZone" class="dropzone">
+      <input type="file" name="file" id="photoFile" accept="image/*" required>
+      <div id="photoPreview" class="preview">Aucun fichier sélectionné</div>
+      <div class="dz-hint">Glisser déposer une image ici ou cliquez pour sélectionner</div>
+    </div>
+    <progress id="photoProgress" value="0" max="100" style="display:none;"></progress>
+    <div id="photoError" class="inline-error" style="display:none;color:#b00;margin-top:6px;"></div>
+    <button type="submit">Upload Photo</button>
+  </form>
+  <div id="photosList">Loading photos...</div>
+</section>
+
+<section>
+  <h3>Videos</h3>
+  <form id="uploadVideoForm">
+    <input type="text" name="title" id="videoTitle" placeholder="Title">
+    <input type="text" name="description" id="videoDesc" placeholder="Description">
+    <input type="file" name="file" id="videoFile" accept="video/*" required>
+    <progress id="videoProgress" value="0" max="100" style="display:none;"></progress>
+    <button type="submit">Upload Video</button>
+  </form>
+  <div id="videosList">Loading videos...</div>
+</section>
+
+<script>
+const CSRF = '{{ csrf }}';
+const MAX_IMAGE = {{ max_image | default(0) }};
+const MAX_VIDEO = {{ max_video | default(0) }};
+
+function validateImageSize(file){
+  if(!file) return true;
+  if(MAX_IMAGE && file.size > MAX_IMAGE){
+    alert('Le fichier dépasse la taille maximale autorisée (' + Math.round(MAX_IMAGE/1024/1024) + ' MB)');
+    return false;
+  }
+  return true;
+}
+
+function validateVideoSize(file){
+  if(!file) return true;
+  if(MAX_VIDEO && file.size > MAX_VIDEO){
+    alert('La vidéo dépasse la taille maximale autorisée (' + Math.round(MAX_VIDEO/1024/1024) + ' MB)');
+    return false;
+  }
+  return true;
+}
+
+async function fetchPhotos(){
+  const r = await fetch('/api/photos');
+  const j = await r.json();
+  const container = document.getElementById('photosList');
+  if(!j.photos || j.photos.length === 0){ container.innerHTML = '<p>No photos</p>'; return; }
+  const ul = document.createElement('ul');
+  j.photos.forEach(p => {
+    const li = document.createElement('li');
+    li.innerHTML = `<strong>${p.title || ''}</strong> - ${p.description || ''} - <a href="/static/uploads/photos/${p.filename}" target="_blank">view</a> `;
+    const del = document.createElement('button');
+    del.textContent = 'Delete';
+    del.addEventListener('click', async ()=>{
+      if(!confirm('Delete this photo?')) return;
+      const res = await fetch(`/api/photos/${p.id}`, {method:'DELETE', headers:{'X-CSRF-Token': CSRF}});
+      if(res.ok) { fetchPhotos(); }
+      else alert('Delete failed');
+    });
+    li.appendChild(del);
+    ul.appendChild(li);
+  });
+  container.innerHTML = '';
+  container.appendChild(ul);
+}
+
+async function fetchVideos(){
+  const r = await fetch('/api/videos');
+  const j = await r.json();
+  const container = document.getElementById('videosList');
+  if(!j.videos || j.videos.length === 0){ container.innerHTML = '<p>No videos</p>'; return; }
+  const ul = document.createElement('ul');
+  j.videos.forEach(p => {
+    const li = document.createElement('li');
+    li.innerHTML = `<strong>${p.title || ''}</strong> - ${p.description || ''} - <a href="/static/uploads/videos/${p.filename}" target="_blank">view</a> `;
+    const del = document.createElement('button');
+    del.textContent = 'Delete';
+    del.addEventListener('click', async ()=>{
+      if(!confirm('Delete this video?')) return;
+      const res = await fetch(`/api/videos/${p.id}`, {method:'DELETE', headers:{'X-CSRF-Token': CSRF}});
+      if(res.ok) { fetchVideos(); }
+      else alert('Delete failed');
+    });
+    li.appendChild(del);
+    ul.appendChild(li);
+  });
+  container.innerHTML = '';
+  container.appendChild(ul);
+}
+
+function uploadWithProgress(url, form, progressEl){
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', url);
+    xhr.setRequestHeader('X-CSRF-Token', CSRF);
+    xhr.upload.addEventListener('progress', (ev) => {
+      if(ev.lengthComputable){
+        progressEl.style.display = '';
+        progressEl.value = Math.round((ev.loaded/ev.total)*100);
+      }
+    });
+    xhr.onload = () => {
+      progressEl.style.display = 'none';
+      if(xhr.status >= 200 && xhr.status < 300){
+        resolve(JSON.parse(xhr.responseText || '{}'));
+      } else reject(xhr.status);
+    };
+    xhr.onerror = () => { progressEl.style.display = 'none'; reject('network'); };
+    xhr.send(form);
+  });
+}
+
+document.getElementById('uploadPhotoForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const fd = new FormData();
+  fd.append('title', document.getElementById('photoTitle').value);
+  fd.append('description', document.getElementById('photoDesc').value);
+  const photoFile = document.getElementById('photoFile').files[0];
+  if(!validateImageSize(photoFile)) return;
+  fd.append('file', photoFile);
+  const prog = document.getElementById('photoProgress');
+  const errBox = document.getElementById('photoError');
+  errBox.style.display = 'none'; errBox.textContent = '';
+  try{
+    await uploadWithProgress('/api/photos', fd, prog);
+    fetchPhotos();
+    alert('Photo uploaded');
+  }catch(e){ errBox.style.display=''; errBox.textContent = 'Upload failed. Vérifiez la taille/fichier et réessayez.'; }
+});
+
+// Drag & drop and preview logic
+const dropZone = document.getElementById('photoDropZone');
+const fileInput = document.getElementById('photoFile');
+const preview = document.getElementById('photoPreview');
+
+dropZone.addEventListener('click', ()=> fileInput.click());
+fileInput.addEventListener('change', () => showPreview(fileInput.files[0]));
+
+['dragenter','dragover'].forEach(ev=> dropZone.addEventListener(ev, (e)=>{ e.preventDefault(); dropZone.classList.add('dragover'); }));
+['dragleave','drop'].forEach(ev=> dropZone.addEventListener(ev, (e)=>{ e.preventDefault(); dropZone.classList.remove('dragover'); }));
+
+dropZone.addEventListener('drop', (e)=>{
+  e.preventDefault();
+  const f = e.dataTransfer.files[0];
+  if(f){
+    fileInput.files = e.dataTransfer.files; // set files
+    if(validateImageSize(f)) showPreview(f);
+  }
+});
+
+function showPreview(file){
+  if(!file) {
+    preview.textContent = 'Aucun fichier sélectionné';
+    preview.style.backgroundImage = '';
+    return;
+  }
+  if(!file.type.startsWith('image/')){
+    preview.textContent = 'Fichier non image';
+    preview.style.backgroundImage = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    preview.style.backgroundImage = `url(${ev.target.result})`;
+    preview.textContent = '';
+  };
+  reader.readAsDataURL(file);
+}
+
+document.getElementById('uploadVideoForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const fd = new FormData();
+  fd.append('title', document.getElementById('videoTitle').value);
+  fd.append('description', document.getElementById('videoDesc').value);
+  const videoFile = document.getElementById('videoFile').files[0];
+  if(!validateVideoSize(videoFile)) return;
+  fd.append('file', videoFile);
+  const prog = document.getElementById('videoProgress');
+  try{
+    await uploadWithProgress('/api/videos', fd, prog);
+    fetchVideos();
+    alert('Video uploaded');
+  }catch(e){ alert('Upload failed'); }
+});
+
+// Initial load
+fetchPhotos();
+fetchVideos();
+</script>
+</body>
+</html>

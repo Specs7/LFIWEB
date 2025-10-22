@@ -61,3 +61,5 @@ node_modules/
 
 # Ignore local secrets file if any
 secrets.json
+\n# Local secrets file\n.lfiweb_secrets
+\n# ignore uploads and backups\nbackend/static/uploads/\n*.bak
