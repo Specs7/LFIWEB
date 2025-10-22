@@ -1,0 +1,13 @@
+body{font-family:system-ui,Arial,sans-serif;margin:20px}
+section{margin-bottom:20px}
+form input[type="text"]{display:block;margin:6px 0;padding:6px;width:320px}
+form input[type="file"]{display:block;margin:6px 0}
+ul{list-style:none;padding-left:0}
+li{padding:6px;border-bottom:1px solid #eee}
+button{margin-left:8px}
+progress{width:320px;height:12px}
+
+.dropzone{border:2px dashed #ccc;padding:8px;width:340px;cursor:pointer;position:relative}
+.dropzone.dragover{border-color:#66a3ff;background:#f0f7ff}
+.preview{width:320px;height:180px;background-size:cover;background-position:center;border:1px solid #ddd;display:flex;align-items:center;justify-content:center;color:#666}
+.dz-hint{font-size:12px;color:#666;margin-top:6px}

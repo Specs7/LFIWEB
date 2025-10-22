@@ -1,2 +1,4 @@
 Flask>=2.0
 pytest
+redis
+pytest-mock
