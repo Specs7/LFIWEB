@@ -63,3 +63,5 @@ node_modules/
 secrets.json
 \n# Local secrets file\n.lfiweb_secrets
 \n# ignore uploads and backups\nbackend/static/uploads/\n*.bak
+lfiweb_backend.zip
+backend/static/uploads/
