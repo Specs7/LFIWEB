@@ -176,4 +176,11 @@ If you'd like, I can prepare a sample `pythonanywhere-wsgi.conf` file or create 
 
 ---
 
+Quick deploy one-liner (run on PythonAnywhere bash to clone, venv, install and init DB):
+
+```bash
+git clone -b feat/pythonanywhere-deploy https://github.com/Specs7/LFIWEB.git ~/DrancyInsoumis && \
+cd ~/DrancyInsoumis && python3 -m venv .venv && source .venv/bin/activate && pip install -U pip && pip install -r backend/requirements.txt && python3 -c "from backend.app import init_db; init_db()"
+```
+
 That’s it — after setting up WSGI and env vars restart the web app from the PythonAnywhere Web tab.
