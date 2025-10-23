@@ -16,9 +16,9 @@ SESSION_COOKIE_SECURE=True
 # SMTP (Gmail app password example) - replace SMTP_PASS with your App Password
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
-SMTP_USER=artloverthegreat00@gmail.com
+SMTP_USER=<your-email@example.com>
 SMTP_PASS=REPLACE_WITH_YOUR_APP_PASSWORD
-FROM_EMAIL="LFIWEB <artloverthegreat00@gmail.com>"
+FROM_EMAIL="LFIWEB <<your-email@example.com>>"
 EOF
 
 chmod 600 "$SECRETS_PATH"
