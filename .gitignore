@@ -65,3 +65,5 @@ secrets.json
 \n# ignore uploads and backups\nbackend/static/uploads/\n*.bak
 lfiweb_backend.zip
 backend/static/uploads/
+./backend/
+.lfiweb_new_secret
