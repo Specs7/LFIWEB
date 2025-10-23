@@ -32,4 +32,5 @@ jobs:
           pip install -r backend/requirements.txt
       - name: Run tests
         run: |
-          python -m pytest -q
+          # Run pytest only against the backend tests directory to avoid collecting non-test scripts
+          python -m pytest -q backend/tests
