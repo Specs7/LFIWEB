@@ -11,7 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.10]
+        # Use explicit string values to avoid YAML parsing (3.10 can become 3.1).
+        python-version: ['3.11']
     services:
       redis:
         image: redis:7
