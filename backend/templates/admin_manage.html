@@ -27,6 +27,30 @@
 </section>
 
 <section>
+  <h3>Articles</h3>
+  <form id="articleForm">
+    <input type="hidden" id="articleId" name="id">
+    <div>
+      <label for="articleTitle">Title</label><br>
+      <input type="text" id="articleTitle" name="title" placeholder="Title" style="width:100%;">
+    </div>
+    <div>
+      <label for="articleAuthor">Author</label><br>
+      <input type="text" id="articleAuthor" name="author" placeholder="Author">
+    </div>
+    <div>
+      <label for="articleContent">Content</label><br>
+      <textarea id="articleContent" name="content" rows="8" style="width:100%;" placeholder="Article content"></textarea>
+    </div>
+    <div style="margin-top:8px;">
+      <button type="submit">Save Article</button>
+      <button type="button" id="articleClear">Clear</button>
+    </div>
+  </form>
+  <div id="articlesList">Loading articles...</div>
+</section>
+
+<section>
   <h3>Videos</h3>
   <form id="uploadVideoForm">
     <input type="text" name="title" id="videoTitle" placeholder="Title">
@@ -84,6 +108,70 @@ async function fetchPhotos(){
   container.innerHTML = '';
   container.appendChild(ul);
 }
+
+// Articles admin section
+async function fetchArticles(){
+  const r = await fetch('/api/articles');
+  const j = await r.json();
+  const container = document.getElementById('articlesList');
+  if(!j.articles || j.articles.length === 0){ container.innerHTML = '<p>No articles</p>'; return; }
+  const ul = document.createElement('ul');
+  j.articles.forEach(a => {
+    const li = document.createElement('li');
+    li.innerHTML = `<strong>${a.title}</strong> - ${a.author || ''} - <small>${a.created_at || ''}</small><div class="article-content">${a.content ? a.content.substring(0,200) : ''}</div>`;
+    const edit = document.createElement('button');
+    edit.textContent = 'Edit';
+    edit.addEventListener('click', ()=> openEditArticle(a));
+    const del = document.createElement('button');
+    del.textContent = 'Delete';
+    del.addEventListener('click', async ()=>{
+      if(!confirm('Delete this article?')) return;
+      const res = await fetch(`/api/articles/${a.id}`, {method:'DELETE', headers:{'X-CSRF-Token': CSRF}});
+      if(res.ok) fetchArticles(); else alert('Delete failed');
+    });
+    li.appendChild(edit);
+    li.appendChild(del);
+    ul.appendChild(li);
+  });
+  container.innerHTML = '';
+  container.appendChild(ul);
+}
+
+function openEditArticle(article){
+  document.getElementById('articleId').value = article.id || '';
+  document.getElementById('articleTitle').value = article.title || '';
+  document.getElementById('articleAuthor').value = article.author || '';
+  document.getElementById('articleContent').value = article.content || '';
+  document.getElementById('articleForm').scrollIntoView({behavior:'smooth'});
+}
+
+document.getElementById('articleForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const id = document.getElementById('articleId').value;
+  const payload = {
+    title: document.getElementById('articleTitle').value,
+    author: document.getElementById('articleAuthor').value,
+    content: document.getElementById('articleContent').value
+  };
+  const opts = {headers: {'Content-Type':'application/json','X-CSRF-Token': CSRF}};
+  let res;
+  if(id){
+    res = await fetch(`/api/articles/${id}`, {method:'PUT', body: JSON.stringify(payload), ...opts});
+  } else {
+    res = await fetch('/api/articles', {method:'POST', body: JSON.stringify(payload), ...opts});
+  }
+  if(res.ok){
+    alert('Saved');
+    document.getElementById('articleId').value = '';
+    document.getElementById('articleTitle').value = '';
+    document.getElementById('articleAuthor').value = '';
+    document.getElementById('articleContent').value = '';
+    fetchArticles();
+  } else {
+    const j = await res.json().catch(()=>({error:'unknown'}));
+    alert('Save failed: ' + (j.error || res.status));
+  }
+});
 
 async function fetchVideos(){
   const r = await fetch('/api/videos');
@@ -207,6 +295,15 @@ document.getElementById('uploadVideoForm').addEventListener('submit', async func
 // Initial load
 fetchPhotos();
 fetchVideos();
+fetchArticles();
+
+// Clear article form
+document.getElementById('articleClear').addEventListener('click', function(){
+  document.getElementById('articleId').value = '';
+  document.getElementById('articleTitle').value = '';
+  document.getElementById('articleAuthor').value = '';
+  document.getElementById('articleContent').value = '';
+});
 </script>
 </body>
 </html>
