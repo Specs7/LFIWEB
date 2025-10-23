@@ -39,8 +39,19 @@
       <input type="text" id="articleAuthor" name="author" placeholder="Author">
     </div>
     <div>
-      <label for="articleContent">Content</label><br>
-      <textarea id="articleContent" name="content" rows="8" style="width:100%;" placeholder="Article content"></textarea>
+      <label for="articleContent">Content (Markdown)</label><br>
+      <div style="margin-bottom:6px;">
+        <button type="button" class="md-btn" data-ins="# ">H1</button>
+        <button type="button" class="md-btn" data-ins="## ">H2</button>
+        <button type="button" class="md-btn" data-ins="### ">H3</button>
+        <button type="button" class="md-btn" data-ins="**bold**">Bold</button>
+        <button type="button" class="md-btn" data-ins="*italic*">Italic</button>
+        <button type="button" class="md-btn" data-ins="- ">List</button>
+        <button type="button" id="mdLinkBtn">Link</button>
+        <button type="button" id="togglePreviewBtn">Preview</button>
+      </div>
+      <textarea id="articleContent" name="content" rows="10" style="width:100%;" placeholder="Article content (Markdown)"></textarea>
+      <div id="articlePreview" style="border:1px solid #ddd;padding:8px;margin-top:8px;display:none;background:#fff;"></div>
     </div>
     <div style="margin-top:8px;">
       <button type="submit">Save Article</button>
@@ -303,6 +314,74 @@ document.getElementById('articleClear').addEventListener('click', function(){
   document.getElementById('articleTitle').value = '';
   document.getElementById('articleAuthor').value = '';
   document.getElementById('articleContent').value = '';
+});
+
+// Markdown toolbar helpers
+document.querySelectorAll('.md-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const ins = btn.getAttribute('data-ins') || '';
+    const ta = document.getElementById('articleContent');
+    const start = ta.selectionStart || 0;
+    const end = ta.selectionEnd || 0;
+    const before = ta.value.slice(0,start);
+    const after = ta.value.slice(end);
+    ta.value = before + ins + ta.value.slice(start);
+    ta.focus();
+    ta.selectionStart = ta.selectionEnd = start + ins.length;
+  });
+});
+
+document.getElementById('mdLinkBtn').addEventListener('click', ()=>{
+  const ta = document.getElementById('articleContent');
+  const url = prompt('URL (https://...)');
+  if(!url) return;
+  const text = prompt('Link text', 'link');
+  const ins = `[${text}](${url})`;
+  const start = ta.selectionStart || 0;
+  const before = ta.value.slice(0,start);
+  ta.value = before + ins + ta.value.slice(start);
+  ta.focus();
+});
+
+// Minimal markdown -> HTML renderer (headings, bold, italic, lists, links, paragraphs)
+function renderMarkdown(md){
+  if(!md) return '';
+  // escape
+  const esc = md.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const lines = esc.split(/\r?\n/);
+  const out = [];
+  let inList = false;
+  lines.forEach(ln=>{
+    if(/^###\s+/.test(ln)){ out.push(`<h3>${ln.replace(/^###\s+/,'')}</h3>`); return; }
+    if(/^##\s+/.test(ln)){ out.push(`<h2>${ln.replace(/^##\s+/,'')}</h2>`); return; }
+    if(/^#\s+/.test(ln)){ out.push(`<h1>${ln.replace(/^#\s+/,'')}</h1>`); return; }
+    if(/^[-*]\s+/.test(ln)){
+      if(!inList){ out.push('<ul>'); inList = true; }
+      out.push(`<li>${ln.replace(/^[-*]\s+/,'')}</li>`);
+      return;
+    } else {
+      if(inList){ out.push('</ul>'); inList = false; }
+    }
+    let ln2 = ln.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+                .replace(/\*(.+?)\*/g,'<em>$1</em>')
+                .replace(/\[(.*?)\]\((.*?)\)/g,'<a href="$2" target="_blank">$1</a>');
+    if(ln2.trim()==='') out.push('<p></p>'); else out.push(`<p>${ln2}</p>`);
+  });
+  if(inList) out.push('</ul>');
+  return out.join('\n');
+}
+
+document.getElementById('togglePreviewBtn').addEventListener('click', ()=>{
+  const pv = document.getElementById('articlePreview');
+  const ta = document.getElementById('articleContent');
+  if(pv.style.display === 'none' || pv.style.display===''){
+    pv.innerHTML = renderMarkdown(ta.value);
+    pv.style.display = '';
+    document.getElementById('togglePreviewBtn').textContent = 'Hide Preview';
+  } else {
+    pv.style.display = 'none';
+    document.getElementById('togglePreviewBtn').textContent = 'Preview';
+  }
 });
 </script>
 </body>
