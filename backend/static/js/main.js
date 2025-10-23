@@ -77,7 +77,9 @@ function formatDate(date) {
 function renderArticles() {
     const container = document.getElementById('articles-container');
     container.innerHTML = '';
-    const isAdmin = document.getElementById('admin-panel') && document.getElementById('admin-panel').style.display !== 'none';
+    // Public page: never show inline admin controls here. Full admin UI is
+    // available only under /admin/manage which includes its own scripts.
+    const isAdmin = false;
     articles.forEach(article => {
         const art = document.createElement('article');
         art.className = 'article';
@@ -102,48 +104,7 @@ function renderArticles() {
         const p = document.createElement('p');
         p.textContent = article.content || '';
         art.appendChild(p);
-        // Admin controls
-        if (isAdmin && article.id) {
-            const ctrl = document.createElement('div');
-            ctrl.style.marginTop = '0.5rem';
-            const editBtn = document.createElement('button');
-            editBtn.className = 'btn';
-            editBtn.textContent = 'Modifier';
-            editBtn.style.marginRight = '0.5rem';
-            editBtn.addEventListener('click', async ()=>{
-                // open modal and populate
-                const modal = document.getElementById('article-edit-modal');
-                document.getElementById('editArticleId').value = article.id;
-                document.getElementById('editTitle').value = article.title || '';
-                document.getElementById('editAuthor').value = article.author || '';
-                document.getElementById('editImage').value = article.image || '';
-                document.getElementById('editContent').value = article.content || '';
-                document.getElementById('editMsg').textContent = '';
-                modal.style.display = 'flex';
-            });
-            const delBtn = document.createElement('button');
-            delBtn.className = 'btn-secondary';
-            delBtn.textContent = 'Supprimer';
-            delBtn.addEventListener('click', async ()=>{
-                if (!confirm('Supprimer cet article ?')) return;
-                try {
-                    const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-                    const headers = {};
-                    if (csrf) headers['X-CSRF-Token'] = csrf;
-                    const res = await fetch('/api/articles/'+article.id, {method:'DELETE', headers});
-                    if (res.ok) {
-                        const j = await fetch('/api/articles');
-                        const dd = await j.json();
-                        if (dd && Array.isArray(dd.articles)) { articles = dd.articles.map(a=>({id:a.id,title:a.title,author:a.author||'Équipe de campagne LFI',date:a.created_at||'',image:a.image||'',content:a.content||''})); renderArticles(); }
-                    } else {
-                        alert('Erreur suppression');
-                    }
-                } catch(e){ alert('Erreur réseau'); }
-            });
-            ctrl.appendChild(editBtn);
-            ctrl.appendChild(delBtn);
-            art.appendChild(ctrl);
-        }
+        // No inline admin controls on public pages.
 
         container.appendChild(art);
     });
@@ -308,92 +269,19 @@ document.addEventListener('DOMContentLoaded', function() {
         updateSocialLinks();
         animateOnScroll();
     });
-    // Check current user and show admin panel if admin
+    // Admin UI is server-side. We still check /api/me to enable in-page admin
+    // controls inside article render (the server-side admin page at /admin/manage
+    // continues to handle full admin workflows). This fetch is kept minimal and
+    // the code below only updates existing DOM controls if present.
     fetch('/api/me').then(r=>r.json()).then(data=>{
         if (data && data.user && data.user.role === 'admin') {
+            // if the public page accidentally contains admin controls, make sure
+            // we only touch them when present
             const panel = document.getElementById('admin-panel');
             if (panel) panel.style.display = 'block';
-            // wire up form
-            const adminForm = document.getElementById('adminArticleForm');
-            if (adminForm) {
-                adminForm.addEventListener('submit', async function(e){
-                    e.preventDefault();
-                    const payload = {
-                        title: document.getElementById('aTitle').value.trim(),
-                        author: document.getElementById('aAuthor').value.trim(),
-                        content: document.getElementById('aContent').value.trim(),
-                        image: document.getElementById('aImage').value.trim()
-                    };
-                    const msg = document.getElementById('adminMsg');
-                    msg.textContent = 'Envoi...';
-                    try {
-                        const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-                        const headers = {'Content-Type':'application/json'};
-                        if (csrf) headers['X-CSRF-Token'] = csrf;
-                        const res = await fetch('/api/articles', {method:'POST', headers, body:JSON.stringify(payload)});
-                        if (res.status === 201) {
-                            msg.textContent = 'Article publié.';
-                            // reload articles
-                            const j = await fetch('/api/articles');
-                            const dd = await j.json();
-                            if (dd && Array.isArray(dd.articles)) {
-                                articles = dd.articles.map(a=>({id:a.id,title:a.title,author:a.author||'Équipe de campagne LFI',date:a.created_at||'',image:a.image||'',content:a.content||''}));
-                                renderArticles();
-                            }
-                            adminForm.reset();
-                        } else if (res.status === 401 || res.status === 403) {
-                            msg.textContent = 'Non autorisé. Connectez-vous via /admin/request.';
-                        } else {
-                            const err = await res.json().catch(()=>({error:'unknown'}));
-                            msg.textContent = 'Erreur: '+(err.error||res.status);
-                        }
-                    } catch (e) {
-                        msg.textContent = 'Erreur réseau';
-                    }
-                });
-            }
-            const closeBtn = document.getElementById('adminClose');
-            if (closeBtn) closeBtn.addEventListener('click', ()=>{document.getElementById('admin-panel').style.display='none'});
         }
     }).catch(()=>{});
     // Modal handlers for article edit
-    const editForm = document.getElementById('articleEditForm');
-    const editModal = document.getElementById('article-edit-modal');
-    if (editForm) {
-        editForm.addEventListener('submit', async function(e){
-            e.preventDefault();
-            const id = document.getElementById('editArticleId').value;
-            const payload = {
-                title: document.getElementById('editTitle').value.trim(),
-                author: document.getElementById('editAuthor').value.trim(),
-                content: document.getElementById('editContent').value.trim(),
-                image: document.getElementById('editImage').value.trim()
-            };
-            const msg = document.getElementById('editMsg');
-            msg.textContent = 'Envoi...';
-            try {
-                const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-                const headers = {'Content-Type':'application/json'};
-                if (csrf) headers['X-CSRF-Token'] = csrf;
-                const res = await fetch('/api/articles/'+id, {method:'PUT', headers, body:JSON.stringify(payload)});
-                if (res.ok) {
-                    msg.textContent = 'Enregistré.';
-                    const j = await fetch('/api/articles');
-                    const dd = await j.json();
-                    if (dd && Array.isArray(dd.articles)) {
-                        articles = dd.articles.map(a=>({id:a.id,title:a.title,author:a.author||'Équipe de campagne LFI',date:a.created_at||'',image:a.image||'',content:a.content||''}));
-                        renderArticles();
-                    }
-                    editModal.style.display = 'none';
-                } else {
-                    const err = await res.json().catch(()=>({error:'unknown'}));
-                    msg.textContent = 'Erreur: '+(err.error||res.status);
-                }
-            } catch(e) {
-                msg.textContent = 'Erreur réseau';
-            }
-        });
-        const cancel = document.getElementById('editCancel');
-        if (cancel) cancel.addEventListener('click', ()=>{ if (editModal) editModal.style.display='none'; });
-    }
+    // Edit modal handlers removed from public JS — admin editing belongs in
+    // the /admin/manage template which includes the full admin scripts.
 });

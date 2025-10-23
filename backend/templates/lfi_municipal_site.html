@@ -132,34 +132,7 @@
 
     <!-- Administration removed: use backend /admin/request for admin actions -->
 
-    <!-- Minimal admin form (hidden until user is authenticated as admin) -->
-    <div id="admin-panel" style="display:none; position: fixed; right: 20px; bottom: 20px; width: 360px; background: white; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); padding: 1rem; z-index:2000;">
-        <h4 style="margin-top:0;">Administration</h4>
-        <form id="adminArticleForm">
-            <div style="margin-bottom:0.5rem;"><input id="aTitle" placeholder="Titre" required style="width:100%; padding:0.5rem;" /></div>
-            <div style="margin-bottom:0.5rem;"><input id="aAuthor" placeholder="Auteur" style="width:100%; padding:0.5rem;" value="Équipe de campagne LFI" /></div>
-            <div style="margin-bottom:0.5rem;"><input id="aImage" placeholder="Image URL" style="width:100%; padding:0.5rem;" /></div>
-            <div style="margin-bottom:0.5rem;"><textarea id="aContent" placeholder="Contenu" rows="4" style="width:100%; padding:0.5rem;"></textarea></div>
-            <div style="display:flex; gap:0.5rem; justify-content:flex-end;"><button id="adminPublish" class="btn" type="submit">Publier</button><button id="adminClose" type="button" class="btn-secondary">Fermer</button></div>
-            <div id="adminMsg" style="margin-top:0.5rem;color:#333;"></div>
-        </form>
-    </div>
-
-    <!-- Edit modal for articles -->
-    <div id="article-edit-modal" class="modal" style="display:none;">
-        <div class="modal-content">
-            <h3>Modifier l'article</h3>
-            <form id="articleEditForm">
-                <input type="hidden" id="editArticleId" />
-                <div class="form-group"><label>Titre</label><input id="editTitle" required style="width:100%; padding:0.5rem;" /></div>
-                <div class="form-group"><label>Auteur</label><input id="editAuthor" style="width:100%; padding:0.5rem;" /></div>
-                <div class="form-group"><label>Image URL</label><input id="editImage" style="width:100%; padding:0.5rem;" /></div>
-                <div class="form-group"><label>Contenu</label><textarea id="editContent" rows="6" style="width:100%; padding:0.5rem;"></textarea></div>
-                <div style="display:flex; justify-content:flex-end; gap:0.5rem;"><button type="submit" class="btn">Enregistrer</button><button type="button" id="editCancel" class="btn-secondary">Annuler</button></div>
-                <div id="editMsg" style="margin-top:0.5rem;color:#333;"></div>
-            </form>
-        </div>
-    </div>
+    <!-- Admin UI removed from public page. Use the authenticated admin interface at /admin/manage -->
 
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
