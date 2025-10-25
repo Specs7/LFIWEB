@@ -24,3 +24,30 @@ jobs:
         run: |
           . .venv/bin/activate
           python scripts/upload_smoke_test_local.py
+  smoke-e2e:
+    runs-on: ubuntu-latest
+    needs: smoke
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install dependencies (including requests)
+        run: |
+          python -m venv .venv
+          . .venv/bin/activate
+          pip install -r backend/requirements.txt
+          pip install requests
+      - name: Start server in background
+        run: |
+          . .venv/bin/activate
+          nohup python backend/app.py > server.log 2>&1 &
+          # wait for server to start
+          for i in {1..20}; do
+            curl -sS http://127.0.0.1:5000/ >/dev/null 2>&1 && break || sleep 1
+          done
+      - name: Run HTTP smoke test
+        run: |
+          . .venv/bin/activate
+          python scripts/upload_smoke_test.py --host http://127.0.0.1:5000

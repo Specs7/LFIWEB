@@ -218,10 +218,11 @@ def init_db():
     );
     CREATE TABLE IF NOT EXISTS articles (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      title TEXT NOT NULL,
-      author TEXT,
-      content TEXT,
-      image TEXT,
+            title TEXT NOT NULL,
+            author TEXT,
+            content TEXT,
+            image TEXT,
+            video TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
     CREATE TABLE IF NOT EXISTS photos (
@@ -259,6 +260,15 @@ def is_allowed_image_url(url: str) -> bool:
         return False
     # Accept relative paths served by our static routes
     if isinstance(url, str) and url.startswith('/static/uploads/'):
+        return True
+    return is_safe_url(url)
+
+
+def is_allowed_media_url(url: str) -> bool:
+    """Allow absolute URLs or relative uploads paths under /static/uploads/photos/ or /static/uploads/videos/."""
+    if not url:
+        return False
+    if isinstance(url, str) and (url.startswith('/static/uploads/photos/') or url.startswith('/static/uploads/videos/')):
         return True
     return is_safe_url(url)
 
@@ -451,7 +461,7 @@ def api_get_articles():
     total = cur.fetchone()[0]
     offset = (page - 1) * per_page
     params.extend([per_page, offset])
-    cur.execute(f"SELECT id, title, author, content, image, created_at FROM articles {where} ORDER BY created_at DESC LIMIT ? OFFSET ?", params)
+    cur.execute(f"SELECT id, title, author, content, image, video, created_at FROM articles {where} ORDER BY created_at DESC LIMIT ? OFFSET ?", params)
     rows = cur.fetchall()
     articles = [dict(r) for r in rows]
     conn.close()
@@ -476,19 +486,23 @@ def api_create_article():
     author = (data.get('author') or '').strip()
     content = (data.get('content') or '').strip()
     image = (data.get('image') or '').strip()
+    video = (data.get('video') or '').strip()
     if not title:
         conn.close()
         return jsonify({'error': 'title required'}), 400
     if len(title) > 200 or len(author) > 100 or len(content) > 10000:
         conn.close()
         return jsonify({'error': 'Input too long'}), 400
-    if image and not is_allowed_image_url(image):
+    if image and not is_allowed_media_url(image):
         conn.close()
         return jsonify({'error': 'Invalid image URL'}), 400
-    cur.execute('INSERT INTO articles (title, author, content, image) VALUES (?,?,?,?)', (title, author, content, image))
+    if video and not is_allowed_media_url(video):
+        conn.close()
+        return jsonify({'error': 'Invalid video URL'}), 400
+    cur.execute('INSERT INTO articles (title, author, content, image, video) VALUES (?,?,?,?,?)', (title, author, content, image, video))
     conn.commit()
     article_id = cur.lastrowid
-    cur.execute('SELECT id, title, author, content, image, created_at FROM articles WHERE id=?', (article_id,))
+    cur.execute('SELECT id, title, author, content, image, video, created_at FROM articles WHERE id=?', (article_id,))
     row = cur.fetchone()
     conn.close()
     return jsonify({'article': dict(row)}), 201
@@ -512,18 +526,22 @@ def api_update_article(article_id):
     author = (data.get('author') or '').strip()
     content = (data.get('content') or '').strip()
     image = (data.get('image') or '').strip()
+    video = (data.get('video') or '').strip()
     if not title:
         conn.close()
         return jsonify({'error': 'title required'}), 400
     if len(title) > 200 or len(author) > 100 or len(content) > 10000:
         conn.close()
         return jsonify({'error': 'Input too long'}), 400
-    if image and not is_allowed_image_url(image):
+    if image and not is_allowed_media_url(image):
         conn.close()
         return jsonify({'error': 'Invalid image URL'}), 400
-    cur.execute('UPDATE articles SET title=?, author=?, content=?, image=? WHERE id=?', (title, author, content, image, article_id))
+    if video and not is_allowed_media_url(video):
+        conn.close()
+        return jsonify({'error': 'Invalid video URL'}), 400
+    cur.execute('UPDATE articles SET title=?, author=?, content=?, image=?, video=? WHERE id=?', (title, author, content, image, video, article_id))
     conn.commit()
-    cur.execute('SELECT id, title, author, content, image, created_at FROM articles WHERE id=?', (article_id,))
+    cur.execute('SELECT id, title, author, content, image, video, created_at FROM articles WHERE id=?', (article_id,))
     row = cur.fetchone()
     conn.close()
     if not row:

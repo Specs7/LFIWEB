@@ -43,6 +43,16 @@
         <select id="articleImageSelect" name="image" style="width:100%;">
           <option value="">(no image)</option>
         </select>
+        <div style="margin-top:6px;">
+          <input type="file" id="articleImageFile" accept="image/*">
+          <button type="button" id="articleImageUploadBtn">Upload & attach</button>
+        </div>
+      </div>
+      <div>
+        <label for="articleVideoSelect">Video</label><br>
+        <select id="articleVideoSelect" name="video" style="width:100%;">
+          <option value="">(no video)</option>
+        </select>
       </div>
     <div>
       <label for="articleContent">Content (Markdown)</label><br>
@@ -135,6 +145,19 @@ async function fetchPhotos(){
   container.appendChild(ul);
 }
 
+  // populate video select when videos fetched
+  async function populateVideoSelect(videos){
+    const sel = document.getElementById('articleVideoSelect');
+    if(!sel) return;
+    sel.innerHTML = '<option value="">(no video)</option>';
+    videos.forEach(v => {
+      const opt = document.createElement('option');
+      opt.value = '/static/uploads/videos/' + v.filename;
+      opt.textContent = (v.title || v.filename);
+      sel.appendChild(opt);
+    });
+  }
+
 // Articles admin section
 async function fetchArticles(){
   const r = await fetch('/api/articles');
@@ -170,6 +193,8 @@ function openEditArticle(article){
   document.getElementById('articleContent').value = article.content || '';
   const sel = document.getElementById('articleImageSelect');
   if(sel){ sel.value = article.image || ''; }
+  const vsel = document.getElementById('articleVideoSelect');
+  if(vsel){ vsel.value = article.video || ''; }
   document.getElementById('articleForm').scrollIntoView({behavior:'smooth'});
 }
 
@@ -180,7 +205,8 @@ document.getElementById('articleForm').addEventListener('submit', async function
     title: document.getElementById('articleTitle').value,
     author: document.getElementById('articleAuthor').value,
     content: document.getElementById('articleContent').value,
-    image: (document.getElementById('articleImageSelect') ? document.getElementById('articleImageSelect').value : '')
+    image: (document.getElementById('articleImageSelect') ? document.getElementById('articleImageSelect').value : ''),
+    video: (document.getElementById('articleVideoSelect') ? document.getElementById('articleVideoSelect').value : '')
   };
   const opts = {headers: {'Content-Type':'application/json','X-CSRF-Token': CSRF}};
   let res;
@@ -221,6 +247,14 @@ async function fetchVideos(){
     });
     li.appendChild(del);
     ul.appendChild(li);
+    // also populate article video select
+    const vsel = document.getElementById('articleVideoSelect');
+    if(vsel){
+      const opt = document.createElement('option');
+      opt.value = '/static/uploads/videos/' + p.filename;
+      opt.textContent = (p.title || p.filename);
+      vsel.appendChild(opt);
+    }
   });
   container.innerHTML = '';
   container.appendChild(ul);
@@ -319,6 +353,30 @@ document.getElementById('uploadVideoForm').addEventListener('submit', async func
     fetchVideos();
     alert('Video uploaded');
   }catch(e){ alert('Upload failed'); }
+});
+
+// Article image inline upload handler
+document.getElementById('articleImageUploadBtn').addEventListener('click', async function(){
+  const f = document.getElementById('articleImageFile').files[0];
+  if(!f) { alert("Choisissez un fichier image d'abord"); return; }
+  if(!validateImageSize(f)) return;
+  const fd = new FormData();
+  fd.append('title', 'article-inline');
+  fd.append('description', 'uploaded from article form');
+  fd.append('file', f);
+  const prog = document.createElement('progress'); prog.value = 0; prog.max = 100; document.body.appendChild(prog);
+  try{
+    const res = await uploadWithProgress('/api/photos', fd, prog);
+    // add to photo list and select
+    await fetchPhotos();
+    if(res && res.photo && res.photo.filename){
+      const url = '/static/uploads/photos/' + res.photo.filename;
+      const sel = document.getElementById('articleImageSelect');
+      if(sel){ sel.value = url; }
+    }
+    alert('Image uploadée et attachée');
+  }catch(e){ alert('Upload inline échoué'); }
+  prog.remove();
 });
 
 // Initial load

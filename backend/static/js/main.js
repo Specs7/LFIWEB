@@ -79,7 +79,14 @@ function renderArticles() {
         art.appendChild(h3);
         art.appendChild(meta);
 
-        if (isSafeUrl(article.image)) {
+        if (article.video && isSafeUrl(article.video)) {
+            const vid = document.createElement('video');
+            vid.controls = true;
+            vid.width = 800;
+            vid.src = article.video;
+            vid.setAttribute('aria-label', article.title || 'Article video');
+            art.appendChild(vid);
+        } else if (isSafeUrl(article.image)) {
             const img = document.createElement('img');
             img.src = article.image;
             img.alt = article.title ? article.title : 'Article image';
@@ -249,6 +256,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 author: a.author || 'Équipe de campagne LFI',
                 date: a.created_at || '',
                 image: a.image || '',
+                video: a.video || '',
                 content: a.content || ''
             }));
         }
