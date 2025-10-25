@@ -1,3 +1,17 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Data and backups
+*.db.bak
+*.bak
+repo-backup.bundle
+pa_audit_report.json
+
+# Editor
+.vscode/
+.idea/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

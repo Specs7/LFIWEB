@@ -53,6 +53,10 @@
         <select id="articleVideoSelect" name="video" style="width:100%;">
           <option value="">(no video)</option>
         </select>
+        <div style="margin-top:6px;">
+          <input type="file" id="articleVideoFile" accept="video/*">
+          <button type="button" id="articleVideoUploadBtn">Upload & attach video</button>
+        </div>
       </div>
     <div>
       <label for="articleContent">Content (Markdown)</label><br>
@@ -376,6 +380,30 @@ document.getElementById('articleImageUploadBtn').addEventListener('click', async
     }
     alert('Image uploadée et attachée');
   }catch(e){ alert('Upload inline échoué'); }
+  prog.remove();
+});
+
+// Article video inline upload handler
+document.getElementById('articleVideoUploadBtn').addEventListener('click', async function(){
+  const f = document.getElementById('articleVideoFile').files[0];
+  if(!f) { alert("Choisissez un fichier vidéo d'abord"); return; }
+  if(!validateVideoSize(f)) return;
+  const fd = new FormData();
+  fd.append('title', 'article-inline-video');
+  fd.append('description', 'uploaded from article form');
+  fd.append('file', f);
+  const prog = document.createElement('progress'); prog.value = 0; prog.max = 100; document.body.appendChild(prog);
+  try{
+    const res = await uploadWithProgress('/api/videos', fd, prog);
+    // add to video list and select
+    await fetchVideos();
+    if(res && res.video && res.video.filename){
+      const url = '/static/uploads/videos/' + res.video.filename;
+      const sel = document.getElementById('articleVideoSelect');
+      if(sel){ sel.value = url; }
+    }
+    alert('Vidéo uploadée et attachée');
+  }catch(e){ alert('Upload inline vidéo échoué'); }
   prog.remove();
 });
 
