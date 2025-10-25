@@ -19,23 +19,8 @@ let articles = [
     }
 ];
 
-let mediaItems = [
-    {
-        title: "Marche pour le climat",
-        description: "Mobilisation citoyenne LFI",
-        image: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=400&h=300&fit=crop"
-    },
-    {
-        title: "Assemblée citoyenne",
-        description: "Démocratie participative",
-        image: "https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=400&h=300&fit=crop"
-    },
-    {
-        title: "L'Avenir en Commun",
-        description: "Présentation du programme",
-        image: "https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=400&h=300&fit=crop"
-    }
-];
+// mediaItems will be populated from the server (/api/photos and /api/videos)
+let mediaItems = [];
 
 let socialLinks = {
     facebook: "https://facebook.com/lafranceinsoumise",
@@ -117,7 +102,14 @@ function renderMedia() {
         const div = document.createElement('div');
         div.className = 'media-item';
 
-        if (isSafeUrl(item.image)) {
+        if (item.type === 'video' && isSafeUrl(item.video)) {
+            const vid = document.createElement('video');
+            vid.controls = true;
+            vid.width = 400;
+            vid.src = item.video;
+            vid.setAttribute('aria-label', item.title || 'Video');
+            div.appendChild(vid);
+        } else if (item.type === 'photo' && isSafeUrl(item.image)) {
             const img = document.createElement('img');
             img.src = item.image;
             img.alt = item.title || 'Media image';
@@ -261,10 +253,47 @@ document.addEventListener('DOMContentLoaded', function() {
             }));
         }
         renderArticles();
+        // Fetch media (photos + videos) from server so uploaded files show on public page
+        return Promise.all([
+            fetch('/api/photos').then(r => r.ok ? r.json() : {photos: []}).catch(() => ({photos: []})),
+            fetch('/api/videos').then(r => r.ok ? r.json() : {videos: []}).catch(() => ({videos: []}))
+        ]);
+    }).then(([photosResp, videosResp]) => {
+        const items = [];
+        if (photosResp && Array.isArray(photosResp.photos)){
+            photosResp.photos.forEach(p => {
+                if (!p.filename) return;
+                items.push({
+                    type: 'photo',
+                    title: p.title || '',
+                    description: p.description || '',
+                    image: '/static/uploads/photos/' + p.filename
+                });
+            });
+        }
+        if (videosResp && Array.isArray(videosResp.videos)){
+            videosResp.videos.forEach(v => {
+                if (!v.filename) return;
+                items.push({
+                    type: 'video',
+                    title: v.title || '',
+                    description: v.description || '',
+                    video: '/static/uploads/videos/' + v.filename
+                });
+            });
+        }
+        // Fallback to existing static mediaItems only if server returned nothing
+        if (items.length === 0) {
+            // keep current static fallback (if any) - existing mediaItems variable already has fallback content removed
+        } else {
+            mediaItems = items;
+        }
+        renderMedia();
+        updateSocialLinks();
+        animateOnScroll();
     }).catch(err => {
-        console.warn('Could not load articles from API, using local fallback:', err);
-        renderArticles();
-    }).finally(() => {
+        console.warn('Could not load media from API:', err);
+        // still render whatever we have
         renderMedia();
         updateSocialLinks();
         animateOnScroll();
@@ -274,11 +303,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // continues to handle full admin workflows). This fetch is kept minimal and
     // the code below only updates existing DOM controls if present.
     fetch('/api/me').then(r=>r.json()).then(data=>{
+        const btn = document.getElementById('public-admin-btn');
         if (data && data.user && data.user.role === 'admin') {
             // if the public page accidentally contains admin controls, make sure
             // we only touch them when present
             const panel = document.getElementById('admin-panel');
             if (panel) panel.style.display = 'block';
+            // keep the admin button visible for admins
+            if (btn) btn.style.display = '';
+        } else {
+            // hide the floating admin button for non-admin visitors
+            if (btn) btn.style.display = 'none';
         }
     }).catch(()=>{});
     // Modal handlers for article edit

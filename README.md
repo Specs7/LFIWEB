@@ -211,6 +211,39 @@ All edits were made in the workspace to integrate a Flask backend, admin flows, 
 - Add more tests for auth flows (token expiry, reuse, rate limiting) and CSRF failure.
 - Improve logging and monitoring; set up backups for the DB.
 
+## Media uploads (photos & videos)
+
+Where uploads are stored
+- Files uploaded via the admin UI are saved under the backend static folder:
+	- Photos: `backend/static/uploads/photos/`
+	- Videos: `backend/static/uploads/videos/`
+
+How the public site serves them
+- The Flask app exposes these via routes that call `send_from_directory`:
+	- `/static/uploads/photos/<filename>`
+	- `/static/uploads/videos/<filename>`
+
+If you uploaded media via `/admin/manage` they will be visible on the public page because the public JS now fetches `/api/photos` and `/api/videos` and builds the gallery using the above static URLs.
+
+Smoke tests we added
+- `scripts/upload_smoke_test_local.py` — runs entirely in-process using `Flask.test_client()`:
+	- Creates (or upgrades) a test admin user in the local `data.db`.
+	- Sets a session with `user_id` and `csrf_token`.
+	- Uploads a tiny PNG to `/api/photos` and verifies the file was saved and served.
+	- Run with: `/home/achil/LFIWEB/backend/.venv/bin/python3 scripts/upload_smoke_test_local.py`
+
+- `scripts/upload_smoke_test.py` — an HTTP smoke test that:
+	- Inserts a one-time login token in the DB, consumes the magic-link via HTTP, extracts the CSRF token from `/admin/manage`, uploads an image via `POST /api/photos`, and validates that the file is accessible over HTTP.
+	- Run against a running server: `python3 scripts/upload_smoke_test.py --host http://127.0.0.1:5000`
+
+Troubleshooting
+- If `upload_smoke_test.py` fails with network errors, prefer the `*_local.py` test because it does not rely on networking and uses Flask's test client.
+- Common causes for uploads not showing:
+	1. File not saved to `backend/static/uploads/...` — check filesystem.
+	2. DB row missing (table `photos` / `videos`) — check `sqlite3 data.db "SELECT * FROM photos ORDER BY created_at DESC LIMIT 5;"`
+	3. Static route blocked by webserver config in production — ensure the hosting platform serves those paths (PythonAnywhere web tab or nginx config).
+
+
 ---
 
 If you want, I can now write this content into `README.md` (overwrite) or `DEPLOY.md` in the repo root. Which filename do you prefer? Also tell me if you want any extra sections (example ENV files, systemd unit, Dockerfile, or Heroku/Gunicorn deployment snippet) and I'll add them.

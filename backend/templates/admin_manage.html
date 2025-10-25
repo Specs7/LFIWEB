@@ -38,6 +38,12 @@
       <label for="articleAuthor">Author</label><br>
       <input type="text" id="articleAuthor" name="author" placeholder="Author">
     </div>
+      <div>
+        <label for="articleImageSelect">Image</label><br>
+        <select id="articleImageSelect" name="image" style="width:100%;">
+          <option value="">(no image)</option>
+        </select>
+      </div>
     <div>
       <label for="articleContent">Content (Markdown)</label><br>
       <div style="margin-bottom:6px;">
@@ -102,6 +108,9 @@ async function fetchPhotos(){
   const container = document.getElementById('photosList');
   if(!j.photos || j.photos.length === 0){ container.innerHTML = '<p>No photos</p>'; return; }
   const ul = document.createElement('ul');
+  // also populate article image select
+  const imageSelect = document.getElementById('articleImageSelect');
+  if(imageSelect) { imageSelect.innerHTML = '<option value="">(no image)</option>'; }
   j.photos.forEach(p => {
     const li = document.createElement('li');
     li.innerHTML = `<strong>${p.title || ''}</strong> - ${p.description || ''} - <a href="/static/uploads/photos/${p.filename}" target="_blank">view</a> `;
@@ -115,6 +124,12 @@ async function fetchPhotos(){
     });
     li.appendChild(del);
     ul.appendChild(li);
+      if(imageSelect){
+        const opt = document.createElement('option');
+        opt.value = '/static/uploads/photos/' + p.filename;
+        opt.textContent = (p.title || p.filename);
+        imageSelect.appendChild(opt);
+      }
   });
   container.innerHTML = '';
   container.appendChild(ul);
@@ -153,6 +168,8 @@ function openEditArticle(article){
   document.getElementById('articleTitle').value = article.title || '';
   document.getElementById('articleAuthor').value = article.author || '';
   document.getElementById('articleContent').value = article.content || '';
+  const sel = document.getElementById('articleImageSelect');
+  if(sel){ sel.value = article.image || ''; }
   document.getElementById('articleForm').scrollIntoView({behavior:'smooth'});
 }
 
@@ -162,7 +179,8 @@ document.getElementById('articleForm').addEventListener('submit', async function
   const payload = {
     title: document.getElementById('articleTitle').value,
     author: document.getElementById('articleAuthor').value,
-    content: document.getElementById('articleContent').value
+    content: document.getElementById('articleContent').value,
+    image: (document.getElementById('articleImageSelect') ? document.getElementById('articleImageSelect').value : '')
   };
   const opts = {headers: {'Content-Type':'application/json','X-CSRF-Token': CSRF}};
   let res;

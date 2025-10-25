@@ -253,6 +253,16 @@ def is_safe_url(url: str) -> bool:
         return False
 
 
+def is_allowed_image_url(url: str) -> bool:
+    """Allow either absolute http(s) URLs or relative uploads paths under /static/uploads/."""
+    if not url:
+        return False
+    # Accept relative paths served by our static routes
+    if isinstance(url, str) and url.startswith('/static/uploads/'):
+        return True
+    return is_safe_url(url)
+
+
 def _check_csrf() -> bool:
     if request.method in ('POST', 'PUT', 'DELETE'):
         header = request.headers.get('X-CSRF-Token')
@@ -472,7 +482,7 @@ def api_create_article():
     if len(title) > 200 or len(author) > 100 or len(content) > 10000:
         conn.close()
         return jsonify({'error': 'Input too long'}), 400
-    if image and not is_safe_url(image):
+    if image and not is_allowed_image_url(image):
         conn.close()
         return jsonify({'error': 'Invalid image URL'}), 400
     cur.execute('INSERT INTO articles (title, author, content, image) VALUES (?,?,?,?)', (title, author, content, image))
@@ -508,7 +518,7 @@ def api_update_article(article_id):
     if len(title) > 200 or len(author) > 100 or len(content) > 10000:
         conn.close()
         return jsonify({'error': 'Input too long'}), 400
-    if image and not is_safe_url(image):
+    if image and not is_allowed_image_url(image):
         conn.close()
         return jsonify({'error': 'Invalid image URL'}), 400
     cur.execute('UPDATE articles SET title=?, author=?, content=?, image=? WHERE id=?', (title, author, content, image, article_id))
