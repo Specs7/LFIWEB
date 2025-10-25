@@ -239,6 +239,11 @@ def init_db():
       description TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
+        CREATE TABLE IF NOT EXISTS site_meta (
+            key TEXT PRIMARY KEY,
+            value TEXT,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
     ''')
     conn.commit()
     conn.close()
@@ -369,9 +374,71 @@ def get_total_upload_bytes() -> int:
 @app.route('/')
 def index():
     try:
-        return render_template('lfi_municipal_site.html')
+        # load site meta values to pass to template
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute('SELECT key, value FROM site_meta')
+        rows = cur.fetchall()
+        meta = {r['key']: r['value'] for r in rows} if rows else {}
+        conn.close()
+        return render_template('lfi_municipal_site.html', site_meta=meta)
     except Exception:
         return render_template_string('<p>Frontend template missing.</p>'), 500
+
+
+# Site meta endpoints
+@app.route('/api/site', methods=['GET'])
+def api_get_site():
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute('SELECT key, value FROM site_meta')
+    rows = cur.fetchall()
+    conn.close()
+    data = {r['key']: r['value'] for r in rows}
+    return jsonify(data), 200
+
+
+@app.route('/api/site', methods=['PUT'])
+def api_update_site():
+    if not session.get('user_id'):
+        return jsonify({'error': 'Unauthorized'}), 401
+    if not _check_csrf():
+        return jsonify({'error': 'Invalid CSRF token'}), 403
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute('SELECT role FROM users WHERE id=?', (session.get('user_id'),))
+    user = cur.fetchone()
+    if not user or user['role'] != 'admin':
+        conn.close()
+        return jsonify({'error': 'Forbidden'}), 403
+    data = request.get_json() or {}
+    # allowed keys and max lengths
+    allowed = {
+        'site_title': 200,
+        'site_subtitle': 200,
+        'footer_text': 2000,
+        'pillars_html': 10000,
+        'contact_html': 5000,
+        'socials_html': 2000
+    }
+    updates = []
+    for k, v in data.items():
+        if k not in allowed:
+            continue
+        val = (v or '').strip()
+        if len(val) > allowed[k]:
+            conn.close()
+            return jsonify({'error': f'{k} too long'}), 400
+        updates.append((val, k))
+    for val, key in updates:
+        cur.execute('INSERT OR REPLACE INTO site_meta (key, value, updated_at) VALUES (?,?,CURRENT_TIMESTAMP)', (key, val))
+    conn.commit()
+    # return updated full object
+    cur.execute('SELECT key, value FROM site_meta')
+    rows = cur.fetchall()
+    conn.close()
+    data = {r['key']: r['value'] for r in rows}
+    return jsonify(data), 200
 
 
 @app.route('/admin/request')

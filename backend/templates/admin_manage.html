@@ -93,6 +93,36 @@
   <div id="videosList">Loading videos...</div>
 </section>
 
+<section>
+  <h3>Paramètres du site</h3>
+  <form id="siteMetaForm">
+    <div>
+      <label for="siteTitle">Titre (en-tête)</label><br>
+      <input type="text" id="siteTitle" name="site_title" style="width:100%;">
+    </div>
+    <div>
+      <label for="siteSubtitle">Sous-titre (grand titre)</label><br>
+      <input type="text" id="siteSubtitle" name="site_subtitle" style="width:100%;">
+    </div>
+    <div>
+      <label for="footerText">Footer (HTML autorisé)</label><br>
+      <textarea id="footerText" name="footer_text" rows="3" style="width:100%;"></textarea>
+    </div>
+    <div>
+      <label for="pillarsHtml">Piliers (HTML)</label><br>
+      <textarea id="pillarsHtml" name="pillars_html" rows="6" style="width:100%;"></textarea>
+    </div>
+    <div>
+      <label for="contactHtml">Contact (HTML)</label><br>
+      <textarea id="contactHtml" name="contact_html" rows="4" style="width:100%;"></textarea>
+    </div>
+    <div style="margin-top:8px;">
+      <button type="submit">Enregistrer les paramètres</button>
+    </div>
+  </form>
+  <div id="siteMetaMsg" style="margin-top:8px;color:green;display:none;"></div>
+</section>
+
 <script>
 const CSRF = '{{ csrf }}';
 const MAX_IMAGE = {{ max_image | default(0) }};
@@ -411,6 +441,7 @@ document.getElementById('articleVideoUploadBtn').addEventListener('click', async
 fetchPhotos();
 fetchVideos();
 fetchArticles();
+fetchSiteMeta();
 
 // Clear article form
 document.getElementById('articleClear').addEventListener('click', function(){
@@ -486,6 +517,40 @@ document.getElementById('togglePreviewBtn').addEventListener('click', ()=>{
     pv.style.display = 'none';
     document.getElementById('togglePreviewBtn').textContent = 'Preview';
   }
+});
+
+async function fetchSiteMeta(){
+  try{
+    const r = await fetch('/api/site');
+    const j = await r.json();
+    document.getElementById('siteTitle').value = j.site_title || '';
+    document.getElementById('siteSubtitle').value = j.site_subtitle || '';
+    document.getElementById('footerText').value = j.footer_text || '';
+    document.getElementById('pillarsHtml').value = j.pillars_html || '';
+    document.getElementById('contactHtml').value = j.contact_html || '';
+  }catch(e){ console.error('failed to load site meta', e); }
+}
+
+document.getElementById('siteMetaForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const payload = {
+    site_title: document.getElementById('siteTitle').value,
+    site_subtitle: document.getElementById('siteSubtitle').value,
+    footer_text: document.getElementById('footerText').value,
+    pillars_html: document.getElementById('pillarsHtml').value,
+    contact_html: document.getElementById('contactHtml').value
+  };
+  try{
+    const res = await fetch('/api/site', {method:'PUT', headers: {'Content-Type':'application/json','X-CSRF-Token': CSRF}, body: JSON.stringify(payload)});
+    if(res.ok){
+      document.getElementById('siteMetaMsg').style.display='';
+      document.getElementById('siteMetaMsg').textContent = 'Enregistré';
+      setTimeout(()=> document.getElementById('siteMetaMsg').style.display='none', 3000);
+    } else {
+      const j = await res.json().catch(()=>({error:'unknown'}));
+      alert('Enregistrement impossible: ' + (j.error || res.status));
+    }
+  }catch(e){ alert('Erreur réseau'); }
 });
 </script>
 </body>

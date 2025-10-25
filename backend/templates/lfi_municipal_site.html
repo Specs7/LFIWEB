@@ -31,8 +31,8 @@
     <main class="container">
         <section class="hero" id="accueil">
             <div class="lfi-logo" style="width: 120px; height: 120px; background: linear-gradient(45deg, #C9462C, #8B1538); border-radius: 50%; margin: 0 auto 2rem; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: white; font-weight: bold;">Φ</div>
-            <h1>L'Avenir en Commun</h1>
-            <div class="subtitle">Pour Notre Ville</div>
+            <h1>{{ site_meta.get('site_subtitle') or "L'Avenir en Commun" }}</h1>
+            <div class="subtitle">{{ site_meta.get('site_title') or 'Pour Notre Ville' }}</div>
             <p>Notre liste municipale La France Insoumise s'engage pour une transformation sociale et écologique de notre commune. Ensemble, construisons l'avenir que nous méritons tous.</p>
         </section>
 
@@ -86,15 +86,19 @@
             </div>
 
             <div class="sidebar">
-                <h3><i class="fas fa-bullhorn"></i> Nos 6 piliers</h3>
-                <ul style="list-style: none; padding: 0;">
-                    <li style="padding: 0.8rem 0; border-bottom: 1px solid #eee;"><i class="fas fa-leaf" style="color: #27ae60; margin-right: 10px;"></i><strong>Urgence écologique</strong><br><small>Transition énergétique et protection de l'environnement</small></li>
-                    <li style="padding: 0.8rem 0; border-bottom: 1px solid #eee;"><i class="fas fa-balance-scale" style="color: #C9462C; margin-right: 10px;"></i><strong>Justice sociale</strong><br><small>Égalité des droits et lutte contre les inégalités</small></li>
-                    <li style="padding: 0.8rem 0; border-bottom: 1px solid #eee;"><i class="fas fa-users" style="color: #3498db; margin-right: 10px;"></i><strong>Démocratie participative</strong><br><small>Citoyens au cœur des décisions</small></li>
-                    <li style="padding: 0.8rem 0; border-bottom: 1px solid #eee;"><i class="fas fa-home" style="color: #e67e22; margin-right: 10px;"></i><strong>Services publics</strong><br><small>Accessibles et de qualité pour tous</small></li>
-                    <li style="padding: 0.8rem 0; border-bottom: 1px solid #eee;"><i class="fas fa-globe-europe" style="color: #9b59b6; margin-right: 10px;"></i><strong>République universelle</strong><br><small>Laïcité et solidarité internationale</small></li>
-                    <li style="padding: 0.8rem 0;"><i class="fas fa-fist-raised" style="color: #8B1538; margin-right: 10px;"></i><strong>Souveraineté populaire</strong><br><small>Le peuple décide de son avenir</small></li>
-                </ul>
+                                {% if site_meta.get('pillars_html') %}
+                                    {{ site_meta.get('pillars_html')|safe }}
+                                {% else %}
+                                <h3><i class="fas fa-bullhorn"></i> Nos 6 piliers</h3>
+                                <ul style="list-style: none; padding: 0;">
+                                        <li style="padding: 0.8rem 0; border-bottom: 1px solid #eee;"><i class="fas fa-leaf" style="color: #27ae60; margin-right: 10px;"></i><strong>Urgence écologique</strong><br><small>Transition énergétique et protection de l'environnement</small></li>
+                                        <li style="padding: 0.8rem 0; border-bottom: 1px solid #eee;"><i class="fas fa-balance-scale" style="color: #C9462C; margin-right: 10px;"></i><strong>Justice sociale</strong><br><small>Égalité des droits et lutte contre les inégalités</small></li>
+                                        <li style="padding: 0.8rem 0; border-bottom: 1px solid #eee;"><i class="fas fa-users" style="color: #3498db; margin-right: 10px;"></i><strong>Démocratie participative</strong><br><small>Citoyens au cœur des décisions</small></li>
+                                        <li style="padding: 0.8rem 0; border-bottom: 1px solid #eee;"><i class="fas fa-home" style="color: #e67e22; margin-right: 10px;"></i><strong>Services publics</strong><br><small>Accessibles et de qualité pour tous</small></li>
+                                        <li style="padding: 0.8rem 0; border-bottom: 1px solid #eee;"><i class="fas fa-globe-europe" style="color: #9b59b6; margin-right: 10px;"></i><strong>République universelle</strong><br><small>Laïcité et solidarité internationale</small></li>
+                                        <li style="padding: 0.8rem 0;"><i class="fas fa-fist-raised" style="color: #8B1538; margin-right: 10px;"></i><strong>Souveraineté populaire</strong><br><small>Le peuple décide de son avenir</small></li>
+                                </ul>
+                                {% endif %}
 
                 <h3 style="margin-top: 2rem;"><i class="fas fa-share-alt"></i> Suivez-nous</h3>
                 <div class="social-links">
@@ -104,12 +108,16 @@
                     <a href="#" title="YouTube"><i class="fab fa-youtube"></i></a>
                 </div>
 
-                <div style="margin-top: 2rem; padding: 1rem; background: #f8f9fa; border-radius: 10px;">
-                    <h4><i class="fas fa-envelope"></i> Contact</h4>
-                    <p><i class="fas fa-map-marker-alt"></i> 123 Rue de la République<br>75001 Notre Ville</p>
-                    <p><i class="fas fa-phone"></i> 01 23 45 67 89</p>
-                    <p><i class="fas fa-envelope"></i> contact@lfi-notreville.fr</p>
-                </div>
+                                {% if site_meta.get('contact_html') %}
+                                    {{ site_meta.get('contact_html')|safe }}
+                                {% else %}
+                                <div style="margin-top: 2rem; padding: 1rem; background: #f8f9fa; border-radius: 10px;">
+                                        <h4><i class="fas fa-envelope"></i> Contact</h4>
+                                        <p><i class="fas fa-map-marker-alt"></i> 123 Rue de la République<br>75001 Notre Ville</p>
+                                        <p><i class="fas fa-phone"></i> 01 23 45 67 89</p>
+                                        <p><i class="fas fa-envelope"></i> contact@lfi-notreville.fr</p>
+                                </div>
+                                {% endif %}
             </div>
         </div>
     </main>
@@ -117,9 +125,9 @@
     <footer class="container">
         <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 1rem;">
             <div class="phi-symbol" style="width: 40px; height: 40px;">Φ</div>
-            <span style="font-weight: bold; color: #C9462C;">La France Insoumise - Notre Ville</span>
+            <span style="font-weight: bold; color: #C9462C;">{{ site_meta.get('site_title') or 'La France Insoumise - Notre Ville' }}</span>
         </div>
-        <p>&copy; 2025 Liste Municipale LFI - Notre Ville. L'Avenir en Commun.</p>
+        <p>{{ site_meta.get('footer_text')|safe if site_meta.get('footer_text') else "&copy; 2025 Liste Municipale LFI - Notre Ville. L'Avenir en Commun." }}</p>
         <div class="social-links" style="margin-top: 1rem;">
             <a href="#" title="Facebook"><i class="fab fa-facebook-f"></i></a>
             <a href="#" title="Twitter"><i class="fab fa-twitter"></i></a>
